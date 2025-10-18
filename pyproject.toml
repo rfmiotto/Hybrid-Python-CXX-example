@@ -1,0 +1,28 @@
+[project]
+name = "myproject"
+version = "0.1.0"
+description = "Example hybrid Python/C++ project using UV and pybind11"
+authors = [{ name = "Renato", email = "example@email.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=2.2.6",
+]
+
+[build-system]
+requires = ["scikit-build-core", "pybind11"]
+build-backend = "scikit_build_core.build"
+
+[tool.scikit-build]
+minimum-version = "0.9"
+build-dir = "build"
+wheel.packages = ["src/myproject"]
+sdist.include = ["src/myproject/core.cpp", "CMakeLists.txt"]
+
+[tool.uv]
+dev-dependencies = [
+  "pytest",
+  "pybind11",
+  "cmake",
+  "ninja"
+]
