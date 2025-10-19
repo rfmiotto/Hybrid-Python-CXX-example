@@ -1,9 +1,14 @@
-from myproject import core
 import numpy as np
+from myproject import core
 
-def main():
-    data = np.random.rand(1_000_000)
-    print("Sum =", core.fast_sum(data))
+# Create a NumPy vector
+vec = np.arange(10, dtype=np.float64)
+print("Original vector:", vec)
 
-if __name__ == "__main__":
-    main()
+# Multiply by scalar in C++ (in-place)
+core.multiply_in_place(vec, 2.0)
+print("After multiply_in_place:", vec)
+
+# Compute dot product (C++)
+result = core.dot_product(vec, vec)
+print("Dot product:", result)
