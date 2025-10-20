@@ -1,13 +1,18 @@
 cmake_minimum_required(VERSION 3.20)
 project(${SKBUILD_PROJECT_NAME} LANGUAGES CXX)
 
-set(PYBIND11_FINDPYTHON ON)
+# Export compile_commands.json for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Prefer Python from the venv
+set(Python3_FIND_VIRTUALENV FIRST)
+find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+
+# Find pybind11 installed in venv
 find_package(pybind11 CONFIG REQUIRED)
 
-# Try to find Eigen3 (system)
+# Find Eigen3 system headers, fallback to FetchContent if missing
 find_package(Eigen3 QUIET)
-
-# If not found, fetch it
 if (NOT Eigen3_FOUND)
     include(FetchContent)
     FetchContent_Declare(
@@ -18,12 +23,31 @@ if (NOT Eigen3_FOUND)
     FetchContent_MakeAvailable(eigen)
 endif()
 
+# --- Build pybind11 module ---
 pybind11_add_module(core src/myproject/core.cpp)
 
+# Link pybind11 and Eigen
 target_link_libraries(core PRIVATE pybind11::module Eigen3::Eigen)
 
-# Optimization flags
+# Set C++ standard and optimization
 target_compile_features(core PRIVATE cxx_std_17)
 target_compile_options(core PRIVATE -O3 -march=native)
 
+# --- Copy compile_commands.json to project root for clangd ---
+add_custom_target(
+    copy_compile_commands ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${CMAKE_BINARY_DIR}/compile_commands.json
+        ${CMAKE_SOURCE_DIR}/compile_commands.json
+    COMMENT "Copying compile_commands.json to project root for clangd"
+)
+
+# --- Copy built .so to src/myproject so Python can import ---
+add_custom_command(TARGET core POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_FILE:core>
+        ${CMAKE_SOURCE_DIR}/src/myproject/
+)
+
+# --- Install target (editable install via pip will use this) ---
 install(TARGETS core LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})

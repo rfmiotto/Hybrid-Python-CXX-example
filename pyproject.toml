@@ -24,5 +24,9 @@ dev-dependencies = [
   "pytest",
   "pybind11",
   "cmake",
-  "ninja"
+  "ninja",
+  "pybind11-stubgen>=2.5.5",
 ]
+
+[project.scripts]
+generate-stubs = "myproject.generate_stubs:main"
